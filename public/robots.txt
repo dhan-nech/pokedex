@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-# This is a development version of robots.txt
-# Adjust as needed for production use
+Sitemap: https://pokedex-djn.vercel.app/sitemap.xml
