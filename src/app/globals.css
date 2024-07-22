@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* :root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+} */
+
+:root {
+  --color-normal: #DDCBD0;
+  --color-fighting: #FCC1B0;
+  --color-flying: #B2D2E8;
+  --color-poison: #CFB7ED;
+  --color-ground: #F4D1A6;
+  --color-rock: #C5AEA8;
+  --color-bug: #C1E0C8;
+  --color-ghost: #D7C2D7;
+  --color-steel: #C2D4CE;
+  --color-fire: #EDC2C4;
+  --color-water: #CBD5ED;
+  --color-grass: #C0D4C8;
+  --color-electric: #E2E2A0;
+  --color-psychic: #DDC0CF;
+  --color-ice: #C7D7DF;
+  --color-dragon: #CADCDF;
+  --color-dark: #C6C5E3;
+  --color-fairy: #E4C0CF;
+  --color-unknown: #C0DFDD;
+  --color-shadow: #CACACA;
+}
+
+*:focus {
+  outline: 2px solid #2e3156;
+  outline-offset: 2px;
+}
+
+@media (min-width: 768px) and (max-width: 1040px) {
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+  
+  .ml-10 {
+    margin-left: 0;
+  }
+  
+  .mt-[-21px] {
+    margin-top: 0;
+  }
+  
+  .w-[200px] {
+    width: 100%;
+    max-width: 200px;
+  }
+}
