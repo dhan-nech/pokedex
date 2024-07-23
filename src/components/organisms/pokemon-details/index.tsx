@@ -1,3 +1,4 @@
+// src/components/organisms/pokemon-details/index.tsx
 'use client'
 
 import React, { useState, useEffect, KeyboardEvent } from 'react';
@@ -21,7 +22,6 @@ interface PokemonPageClientProps {
   };
 }
 
-// New helper function to format Pokemon number
 const formatPokemonNumber = (id: number): string => {
   return id.toString().padStart(3, '0');
 };
@@ -126,7 +126,6 @@ const PokemonPageClient: React.FC<PokemonPageClientProps> = ({
     return 'var(--color-normal)';
   };
 
-  // Use the new formatting function
   const formattedPokemonNumber = formatPokemonNumber(pokemonData.id);
 
   return (
@@ -223,6 +222,16 @@ const PokemonPageClient: React.FC<PokemonPageClientProps> = ({
           />
          
           <EvolutionChain id={formattedPokemonNumber} chainUrl={dataSpecies?.evolution_chain.url}/>
+        </div>
+
+        {/* Add ModalControlButtons for mobile devices */}
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-mainbg p-4 flex justify-center">
+          <ModalControlButtons 
+            onPrevCard={handlePrevCard}
+            onNextCard={handleNextCard}
+            id={pokemonData.id}
+            name={pokemonData.name}
+          />
         </div>
       </div>
     </div>

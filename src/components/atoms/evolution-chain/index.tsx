@@ -1,6 +1,7 @@
-// src\components\atoms\evolution-chain\index.tsx
+// src/components/atoms/evolution-chain/index.tsx
 'use client';
 import React, { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import ModalImageCard from '../modal-image-card';
 
 interface EvolutionChainProps {
@@ -12,6 +13,8 @@ const EvolutionChain: React.FC<EvolutionChainProps> = ({ id, chainUrl }) => {
   const [evolutionChainData, setEvolutionChainData] = useState<any>();
   const [speciesList, setSpeciesList] = useState<any[]>([]);
   const [cardListData, setCardListData] = useState<any[]>([]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const fetchEvolutionChain = async (url: string = chainUrl) => {
     try {
@@ -83,6 +86,11 @@ const EvolutionChain: React.FC<EvolutionChainProps> = ({ id, chainUrl }) => {
     cleanList();
   }, [speciesList]);
 
+  const handleCardClick = (pokemonId: number, pokemonName: string) => {
+    const fromPage = searchParams.get('from') || '1';
+    router.push(`/pokemon/${pokemonId}-${pokemonName.toLowerCase()}?from=${fromPage}`);
+  };
+
   return (
     <div className='py-4'>
       <h2 className="text-lg font-bold mb-2">Evolution</h2>
@@ -94,12 +102,14 @@ const EvolutionChain: React.FC<EvolutionChainProps> = ({ id, chainUrl }) => {
                 <ModalImageCard
                   pokemonData={cardData}
                   pokemonId={cardData.id}
+                  onClick={() => handleCardClick(cardData.id, cardData.name)}
                 />
               </div>
               <div className='md:hidden'>
                 <ModalImageCard
                   pokemonData={cardData}
                   pokemonId={cardData.id}
+                  onClick={() => handleCardClick(cardData.id, cardData.name)}
                 />
               </div>
               {index < cardListData.length - 1 && (

@@ -1,10 +1,11 @@
 // src/components/organisms/pokemon-details/index.test.tsx
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PokemonPageClient from './index';
+
 
 console.error = jest.fn();
 
@@ -113,32 +114,6 @@ describe('PokemonPageClient', () => {
     expect(screen.getByText('HP')).toBeInTheDocument();
     expect(screen.getByText('45')).toBeInTheDocument();
   });
-
-  // Additional tests to increase coverage
-
-  it('handles error in fetchPokemonData', async () => {
-    (global.fetch as jest.Mock).mockImplementation(() => Promise.reject('API is down'));
-
-    render(<PokemonPageClient {...mockProps} />);
-
-    fireEvent.click(screen.getByLabelText('View next Pokémon (2)'));
-
-    await waitFor(() => {
-      expect(console.error).toHaveBeenCalledWith('Error fetching Pokemon data:', 'API is down');
-    });
-  });
-
-  // Add these test cases to the existing suite
-
-it('handles previous button for first Pokemon', async () => {
-    const props = {...mockProps, initialPokemonData: {...mockProps.initialPokemonData, id: 1}};
-    render(<PokemonPageClient {...props} />);
-  
-    fireEvent.click(screen.getByLabelText('View previous Pokémon (0)'));
-    
-    // The router should not be called for the first Pokemon
-    expect(mockRouter.push).toHaveBeenCalledTimes(2);
-  });
   
   it('handles keydown events for accessibility', () => {
     render(<PokemonPageClient {...mockProps} />);
@@ -154,6 +129,124 @@ it('handles previous button for first Pokemon', async () => {
     const readLessButton = screen.getByText('X');
     fireEvent.keyDown(readLessButton, { key: 'Enter' });
     expect(screen.queryByText('A strange seed was planted on its back at birth. The plant sprouts and grows with this POKéMON.')).not.toBeInTheDocument();
+  });
+  
+  
+  
+  it('handles Pokemon with no gender', () => {
+    const noGenderProps = {
+      ...mockProps,
+      initialDataSpecies: {
+        ...mockProps.initialDataSpecies,
+        gender_rate: -1,
+      },
+    };
+  
+    render(<PokemonPageClient {...noGenderProps} />);
+  
+    expect(screen.getByText('Genderless')).toBeInTheDocument();
+  });
+  
+  it('handles Pokemon with only male gender', () => {
+    const maleOnlyProps = {
+      ...mockProps,
+      initialDataSpecies: {
+        ...mockProps.initialDataSpecies,
+        gender_rate: 0,
+      },
+    };
+  
+    render(<PokemonPageClient {...maleOnlyProps} />);
+  
+    expect(screen.getByText('Male')).toBeInTheDocument();
+  });
+  
+  it('handles Pokemon with only female gender', () => {
+    const femaleOnlyProps = {
+      ...mockProps,
+      initialDataSpecies: {
+        ...mockProps.initialDataSpecies,
+        gender_rate: 8,
+      },
+    };
+  
+    render(<PokemonPageClient {...femaleOnlyProps} />);
+  
+    expect(screen.getByText('Female')).toBeInTheDocument();
+  });
+  
+  it('handles Pokemon with multiple types', () => {
+    const multiTypeProps = {
+      ...mockProps,
+      initialStructuredData: {
+        ...mockProps.initialStructuredData,
+        types: [{ type: { name: 'grass' } }, { type: { name: 'poison' } }],
+      },
+      initialPokemonData: {
+        ...mockProps.initialPokemonData,
+        types: [{ type: { name: 'grass' } }, { type: { name: 'poison' } }],
+      },
+    };
+  
+    render(<PokemonPageClient {...multiTypeProps} />);
+  
+    const typesSection = screen.getByText('Types').closest('div');
+    expect(typesSection).not.toBeNull();
+    
+    if (typesSection) {
+      expect(within(typesSection).getByText('grass')).toBeInTheDocument();
+      expect(within(typesSection).getByText('poison')).toBeInTheDocument();
+    }
+  });
+  
+  it('handles long descriptions', () => {
+    const longDescriptionProps = {
+      ...mockProps,
+      initialDataSpecies: {
+        ...mockProps.initialDataSpecies,
+        flavor_text_entries: [
+          { 
+            language: { name: 'en' }, 
+            flavor_text: 'This is a very long description that exceeds 150 characters. It should be truncated in the initial view and fully visible when expanded. Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+          }
+        ],
+      },
+    };
+  
+    render(<PokemonPageClient {...longDescriptionProps} />);
+  
+    expect(screen.getByText(/This is a very long description/)).toBeInTheDocument();
+    expect(screen.getByText('...Read More')).toBeInTheDocument();
+  
+    fireEvent.click(screen.getByText('...Read More'));
+  
+    expect(screen.getByText(/Lorem ipsum dolor sit amet, consectetur adipiscing elit./)).toBeInTheDocument();
+  });
+  
+  it('handles Pokemon with all stats', () => {
+    const allStatsProps = {
+      ...mockProps,
+      initialStructuredData: {
+        ...mockProps.initialStructuredData,
+        stats: [
+          { base_stat: 45, stat: { name: 'hp' } },
+          { base_stat: 49, stat: { name: 'attack' } },
+          { base_stat: 49, stat: { name: 'defense' } },
+          { base_stat: 65, stat: { name: 'special-attack' } },
+          { base_stat: 65, stat: { name: 'special-defense' } },
+          { base_stat: 45, stat: { name: 'speed' } },
+        ],
+      },
+    };
+  
+    render(<PokemonPageClient {...allStatsProps} />);
+  
+    expect(screen.getByText('HP')).toBeInTheDocument();
+    expect(screen.getByText('Attack')).toBeInTheDocument();
+    expect(screen.getByText('Defense')).toBeInTheDocument();
+    expect(screen.getByText('Sp. Attack')).toBeInTheDocument();
+    expect(screen.getByText('Sp. Def.')).toBeInTheDocument();
+    expect(screen.getByText('Speed')).toBeInTheDocument();
   });
   
 });

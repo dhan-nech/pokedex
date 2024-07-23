@@ -63,18 +63,36 @@ const PokemonGrid: React.FC<PokemonGridProps> = ({
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const router = useRouter();
 
+  // const parseStatsFromURL = useCallback(() => {
+  //   if (typeof window !== 'undefined') {
+  //     const params = new URLSearchParams(window.location.search);
+  //     const newStatsFilter = {...defaultStatsFilter};
+  //     Object.keys(defaultStatsFilter).forEach(key => {
+  //       const param = params.get(`stats_${key}`);
+  //       if (param) {
+  //         const [min, max] = param.split(',').map(Number);
+  //         newStatsFilter[key as keyof StatsFilter] = [min, max];
+  //       }
+  //     });
+  //     return newStatsFilter;
+  //   }
+  //   return defaultStatsFilter;
+  // }, []);
+
   const parseStatsFromURL = useCallback(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const newStatsFilter = {...defaultStatsFilter};
+      let hasStats = false;
       Object.keys(defaultStatsFilter).forEach(key => {
         const param = params.get(`stats_${key}`);
         if (param) {
+          hasStats = true;
           const [min, max] = param.split(',').map(Number);
           newStatsFilter[key as keyof StatsFilter] = [min, max];
         }
       });
-      return newStatsFilter;
+      return hasStats ? newStatsFilter : defaultStatsFilter;
     }
     return defaultStatsFilter;
   }, []);
@@ -102,17 +120,42 @@ const PokemonGrid: React.FC<PokemonGridProps> = ({
     setStatsFilter(parseStatsFromURL());
   }, [initialPokemon, fetchPokemonDetails, initialSearchQuery, initialSelectedTypes, initialSelectedGenders, parseStatsFromURL]);
 
+  // const updateURL = useCallback((newSearch?: string, newTypes?: string[], newGenders?: string[], newStats?: StatsFilter) => {
+  //   const params = new URLSearchParams();
+  //   if (newSearch !== undefined && newSearch !== '') params.append('search', newSearch);
+  //   if (newTypes !== undefined && newTypes.length > 0) params.append('types', newTypes.join(','));
+  //   if (newGenders !== undefined && newGenders.length > 0) params.append('genders', newGenders.join(','));
+  //   if (newStats !== undefined) {
+  //     Object.entries(newStats).forEach(([key, value]) => {
+  //       params.append(`stats_${key}`, `${value[0]},${value[1]}`);
+  //     });
+  //   }
+    
+  //   router.push(`/${currentPage}?${params.toString()}`, { scroll: false });
+  // }, [currentPage, router]);
+
   const updateURL = useCallback((newSearch?: string, newTypes?: string[], newGenders?: string[], newStats?: StatsFilter) => {
     const params = new URLSearchParams();
     if (newSearch !== undefined && newSearch !== '') params.append('search', newSearch);
     if (newTypes !== undefined && newTypes.length > 0) params.append('types', newTypes.join(','));
     if (newGenders !== undefined && newGenders.length > 0) params.append('genders', newGenders.join(','));
-    if (newStats !== undefined) {
-      Object.entries(newStats).forEach(([key, value]) => {
-        params.append(`stats_${key}`, `${value[0]},${value[1]}`);
-      });
-    }
     
+    if (newStats !== undefined) {
+      const hasNonDefaultStats = Object.entries(newStats).some(([key, value]) => {
+        return value[0] !== defaultStatsFilter[key as keyof StatsFilter][0] || 
+               value[1] !== defaultStatsFilter[key as keyof StatsFilter][1];
+      });
+
+      if (hasNonDefaultStats) {
+        Object.entries(newStats).forEach(([key, value]) => {
+          if (value[0] !== defaultStatsFilter[key as keyof StatsFilter][0] || 
+              value[1] !== defaultStatsFilter[key as keyof StatsFilter][1]) {
+            params.append(`stats_${key}`, `${value[0]},${value[1]}`);
+          }
+        });
+      }
+    }
+
     router.push(`/${currentPage}?${params.toString()}`, { scroll: false });
   }, [currentPage, router]);
 

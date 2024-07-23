@@ -9,7 +9,7 @@ interface StatsProps {
 }
 
 const Stats: React.FC<StatsProps> = ({ data }) => {
-  const maxStat = 110; // Maximum stat value for scaling
+  const maxStat = 210; // Maximum stat value for scaling
 
   const getStatName = (name: string): string => {
     switch (name) {

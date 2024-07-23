@@ -1,48 +1,77 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import ModalImageCard from './index';
-import { useRouter } from 'next/navigation';
+// src/components/atoms/modal-image-card/index.test.tsx
 
-// Mock the useRouter hook
-jest.mock('next/navigation', () => ({
-  useRouter: jest.fn(),
-}));
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import ModalImageCard from './index';
 
 describe('ModalImageCard', () => {
   const mockPokemonData = {
     name: 'Pikachu',
-    image: '/pikachu.png',
+    image: 'https://example.com/pikachu.png',
   };
-  const mockPokemonId = 25;
+
+  const mockOnClick = jest.fn();
 
   beforeEach(() => {
-    (useRouter as jest.Mock).mockReturnValue({
-      push: jest.fn(),
-    });
-    render(<ModalImageCard pokemonData={mockPokemonData} pokemonId={mockPokemonId} />);
+    mockOnClick.mockClear();
   });
 
-  it('renders the Pokemon image', () => {
-    const image = screen.getByAltText('An Image of Pikachu');
-    expect(image).toBeInTheDocument();
-    expect(image).toHaveAttribute('src', expect.stringContaining('pikachu.png'));
+  it('renders the component with correct data', () => {
+    render(<ModalImageCard pokemonData={mockPokemonData} pokemonId={25} onClick={mockOnClick} />);
+
+    expect(screen.getByText('Pikachu')).toBeInTheDocument();
+    expect(screen.getByAltText('An Image of Pikachu')).toHaveAttribute('src', '/_next/image?url=https%3A%2F%2Fexample.com%2Fpikachu.png&w=256&q=75');
   });
 
-  it('has correct link to Pokemon details', () => {
-    const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/pokemon/25-pikachu');
+  it('calls onClick when clicked', () => {
+    render(<ModalImageCard pokemonData={mockPokemonData} pokemonId={25} onClick={mockOnClick} />);
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
 
-  it('applies correct CSS classes', () => {
-    const container = screen.getByRole('link').firstChild;
-    expect(container).toHaveClass('max-w-[170px]', 'md:w-[200px]', 'sm:w-[200px]', 'h-[250px]', 'rounded', 'overflow-hidden', 'border-2', 'border-dashed', 'border-gray-300', 'cursor-pointer', 'group-focus:ring-2', 'group-focus:ring-maintext');
+  it('calls onClick when Enter key is pressed', () => {
+    render(<ModalImageCard pokemonData={mockPokemonData} pokemonId={25} onClick={mockOnClick} />);
+
+    fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter' });
+    expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
 
-//   it('handles missing image gracefully', () => {
-//     const { rerender } = render(<ModalImageCard pokemonData={{...mockPokemonData, image: ''}} pokemonId={mockPokemonId} />);
-//     const image = screen.getByAltText('An Image of Pikachu');
-//     expect(image).toHaveAttribute('src', '');
-//     rerender(<ModalImageCard pokemonData={{...mockPokemonData, image: undefined}} pokemonId={mockPokemonId} />);
-//     expect(image).toHaveAttribute('src', '');
-//   });
+  it('calls onClick when Space key is pressed', () => {
+    render(<ModalImageCard pokemonData={mockPokemonData} pokemonId={25} onClick={mockOnClick} />);
+
+    fireEvent.keyDown(screen.getByRole('button'), { key: ' ' });
+    expect(mockOnClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call onClick when other keys are pressed', () => {
+    render(<ModalImageCard pokemonData={mockPokemonData} pokemonId={25} onClick={mockOnClick} />);
+
+    fireEvent.keyDown(screen.getByRole('button'), { key: 'A' });
+    expect(mockOnClick).not.toHaveBeenCalled();
+  });
+
+  it('renders with empty image when pokemonData.image is empty', () => {
+    const emptyImagePokemonData = { ...mockPokemonData, image: '' };
+    render(<ModalImageCard pokemonData={emptyImagePokemonData} pokemonId={25} onClick={mockOnClick} />);
+
+    const imgElement = screen.getByAltText('An Image of Pikachu');
+    expect(imgElement).toHaveAttribute('src', '');
+  });
+
+  it('has correct accessibility attributes', () => {
+    render(<ModalImageCard pokemonData={mockPokemonData} pokemonId={25} onClick={mockOnClick} />);
+
+    const button = screen.getByRole('button');
+    expect(button).toHaveAttribute('aria-label', 'View details for Pikachu');
+    expect(button).toHaveAttribute('tabIndex', '0');
+  });
+
+  it('applies focus styles correctly', () => {
+    render(<ModalImageCard pokemonData={mockPokemonData} pokemonId={25} onClick={mockOnClick} />);
+
+    const button = screen.getByRole('button');
+    expect(button).toHaveClass('group-focus:ring-2', 'group-focus:ring-maintext');
+  });
 });
