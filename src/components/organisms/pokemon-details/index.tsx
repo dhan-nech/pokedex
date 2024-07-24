@@ -152,7 +152,7 @@ const PokemonPageClient: React.FC<PokemonPageClientProps> = ({
           </div>
           <div className="w-2/3 p-4">
             <div className="flex justify-between items-center border-b pb-4 mb-4 ">
-              <h1 id="pokemon-details-title" className='text-2xl font-bold border-r border-SECONDARY pr-5'>
+              <h1 id="pokemon-details-title" className='text-xl font-bold border-r border-SECONDARY pr-5'>
                 {capitalizeFirstLetter(structuredData?.name)}
               </h1>
               <div className='text-xl font-medium border-r border-SECONDARY pr-5'>
