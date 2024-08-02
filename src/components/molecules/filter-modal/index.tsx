@@ -44,6 +44,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   const [workingTypes, setWorkingTypes] = useState(selectedTypes);
   const [workingGenders, setWorkingGenders] = useState(selectedGenders);
   const [workingStats, setWorkingStats] = useState(statsFilter);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const typeOptions = ['Normal', 'Fighting', 'Flying', 'Poison', 'Ground', 'Rock', 'Bug', 'Ghost', 'Steel', 'Fire', 'Water', 'Grass', 'Electric', 'Psychic', 'Ice', 'Dragon', 'Dark', 'Fairy', 'Unknown', 'Shadow'];
   const genderOptions = ['Male', 'Female', 'Genderless'];
@@ -67,6 +68,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
     setWorkingStats(defaultStatsFilter);
   };
 
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
       <div className="bg-mainbg p-4 rounded-lg w-80 max-h-[90vh] overflow-y-auto">
@@ -80,6 +85,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
             options={typeOptions} 
             selectedOptions={workingTypes} 
             onChange={setWorkingTypes}
+            isOpen={expandedSection === 'type'}
+            onToggle={() => toggleSection('type')}
           />
         </div>
         <div className="mb-4">
@@ -88,18 +95,28 @@ const FilterModal: React.FC<FilterModalProps> = ({
             options={genderOptions} 
             selectedOptions={workingGenders} 
             onChange={setWorkingGenders}
+            isOpen={expandedSection === 'gender'}
+            onToggle={() => toggleSection('gender')}
           />
         </div>
         <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-2">Stats</h3>
-          {Object.entries(workingStats).map(([stat, value]) => (
-            <StatsSlider
-              key={stat}
-              label={stat}
-              value={value}
-              onChange={(newValue: any) => setWorkingStats(prev => ({ ...prev, [stat]: newValue }))}
-            />
-          ))}
+          <MobileDropdown 
+            label="Stats" 
+            options={[]} 
+            selectedOptions={[]}
+            onChange={() => {}}
+            isOpen={expandedSection === 'stats'}
+            onToggle={() => toggleSection('stats')}
+          >
+            {Object.entries(workingStats).map(([stat, value]) => (
+              <StatsSlider
+                key={stat}
+                label={stat}
+                value={value}
+                onChange={(newValue: any) => setWorkingStats(prev => ({ ...prev, [stat]: newValue }))}
+              />
+            ))}
+          </MobileDropdown>
         </div>
         <div className="mt-4 flex justify-between">
           <button 
