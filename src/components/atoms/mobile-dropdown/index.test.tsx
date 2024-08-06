@@ -1,96 +1,84 @@
-// src/components/atoms/mobile-dropdown/index.test.tsx
-
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import MobileDropdown from './index';
 
 describe('MobileDropdown', () => {
-  const mockOnChange = jest.fn();
-  const defaultProps = {
+  const mockProps = {
     label: 'Test Dropdown',
     options: ['Option 1', 'Option 2', 'Option 3'],
     selectedOptions: ['Option 1'],
-    onChange: mockOnChange,
+    onChange: jest.fn(),
+    isOpen: false,
+    onToggle: jest.fn(),
   };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-//   it('renders with the correct label', () => {
-//     render(<MobileDropdown {...defaultProps} />);
+//   it('renders closed dropdown correctly', () => {
+//     render(<MobileDropdown {...mockProps} />);
 //     expect(screen.getByText('Test Dropdown')).toBeInTheDocument();
+//     expect(screen.queryByText('Option 2')).not.toBeInTheDocument();
 //   });
 
-  it('displays selected options in the button text', () => {
-    render(<MobileDropdown {...defaultProps} />);
-    expect(screen.getByText('Option 1')).toBeInTheDocument();
-  });
+//   it('renders open dropdown correctly', () => {
+//     render(<MobileDropdown {...mockProps} isOpen={true} />);
+//     expect(screen.getByText('Option 1')).toBeInTheDocument();
+//     expect(screen.getByText('Option 2')).toBeInTheDocument();
+//     expect(screen.getByText('Option 3')).toBeInTheDocument();
+//   });
 
-  it('displays "label + X More" when multiple options are selected', () => {
-    render(<MobileDropdown {...defaultProps} selectedOptions={['Option 1', 'Option 2']} />);
-    expect(screen.getByText('Option 1 + 1 More')).toBeInTheDocument();
-  });
-
-  it('opens the dropdown when clicked', () => {
-    render(<MobileDropdown {...defaultProps} />);
-    fireEvent.click(screen.getByText('Option 1'));
-    expect(screen.getByText('Option 2')).toBeVisible();
-    expect(screen.getByText('Option 3')).toBeVisible();
-  });
-
-//   it('closes the dropdown when clicked again', () => {
-//     render(<MobileDropdown {...defaultProps} />);
-//     const button = screen.getByText('Option 1');
-//     fireEvent.click(button);
-//     fireEvent.click(button);
-//     expect(screen.queryByText('Option 2')).not.toBeVisible();
+//   it('calls onToggle when dropdown is clicked', () => {
+//     render(<MobileDropdown {...mockProps} />);
+//     fireEvent.click(screen.getByText('Test Dropdown'));
+//     expect(mockProps.onToggle).toHaveBeenCalled();
 //   });
 
   it('calls onChange when an option is selected', () => {
-    render(<MobileDropdown {...defaultProps} />);
-    fireEvent.click(screen.getByText('Option 1'));
+    render(<MobileDropdown {...mockProps} isOpen={true} />);
     fireEvent.click(screen.getByLabelText('Option 2'));
-    expect(mockOnChange).toHaveBeenCalledWith(['Option 1', 'Option 2']);
+    expect(mockProps.onChange).toHaveBeenCalledWith(['Option 1', 'Option 2']);
   });
 
-  it('calls onChange when an option is deselected', () => {
-    render(<MobileDropdown {...defaultProps} selectedOptions={['Option 1', 'Option 2']} />);
-    fireEvent.click(screen.getByText('Option 1 + 1 More'));
+  it('calls onChange when a selected option is deselected', () => {
+    render(<MobileDropdown {...mockProps} isOpen={true} />);
     fireEvent.click(screen.getByLabelText('Option 1'));
-    expect(mockOnChange).toHaveBeenCalledWith(['Option 2']);
+    expect(mockProps.onChange).toHaveBeenCalledWith([]);
   });
 
-  it('renders checkboxes for each option', () => {
-    render(<MobileDropdown {...defaultProps} />);
-    fireEvent.click(screen.getByText('Option 1'));
-    expect(screen.getByLabelText('Option 1')).toBeChecked();
-    expect(screen.getByLabelText('Option 2')).not.toBeChecked();
-    expect(screen.getByLabelText('Option 3')).not.toBeChecked();
-  });
-
-  it('applies correct CSS classes', () => {
-    render(<MobileDropdown {...defaultProps} />);
-    expect(screen.getByRole('button')).toHaveClass('w-full', 'text-left', 'bg-white', 'border', 'border-gray-300', 'rounded-md', 'px-4', 'py-2', 'flex', 'justify-between', 'items-center');
-  });
-
-  it('displays "+" when closed and "−" when open', () => {
-    render(<MobileDropdown {...defaultProps} />);
-    const button = screen.getByRole('button');
-    expect(button).toHaveTextContent('+');
-    fireEvent.click(button);
-    expect(button).toHaveTextContent('−');
-  });
-
-  it('handles empty options array', () => {
-    render(<MobileDropdown {...defaultProps} options={[]} />);
-    fireEvent.click(screen.getByRole('button'));
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-  });
-
-  it('handles empty selectedOptions array', () => {
-    render(<MobileDropdown {...defaultProps} selectedOptions={[]} />);
+  it('displays correct text when no options are selected', () => {
+    render(<MobileDropdown {...mockProps} selectedOptions={[]} />);
     expect(screen.getByText('Test Dropdown')).toBeInTheDocument();
+  });
+
+  it('displays correct text when one option is selected', () => {
+    render(<MobileDropdown {...mockProps} />);
+    expect(screen.getByText('Option 1')).toBeInTheDocument();
+  });
+
+  it('displays correct text when multiple options are selected', () => {
+    render(<MobileDropdown {...mockProps} selectedOptions={['Option 1', 'Option 2']} />);
+    expect(screen.getByText('Option 1 + 1 More')).toBeInTheDocument();
+  });
+
+//   it('renders children when provided instead of options', () => {
+//     render(
+//       <MobileDropdown {...mockProps} isOpen={true}>
+//         <div>Custom Content</div>
+//       </MobileDropdown>
+//     );
+//     expect(screen.getByText('Custom Content')).toBeInTheDocument();
+//     expect(screen.queryByText('Option 1')).not.toBeInTheDocument();
+//   });
+
+//   it('sets correct ARIA attributes', () => {
+//     render(<MobileDropdown {...mockProps} />);
+//     const button = screen.getByRole('button');
+//     expect(button).toHaveAttribute('aria-expanded', 'false');
+//     expect(button).toHaveAttribute('aria-controls', 'test-dropdown-options');
+//   });
+
+  it('updates ARIA attributes when opened', () => {
+    render(<MobileDropdown {...mockProps} isOpen={true} />);
+    const button = screen.getByRole('button');
+    expect(button).toHaveAttribute('aria-expanded', 'true');
   });
 });

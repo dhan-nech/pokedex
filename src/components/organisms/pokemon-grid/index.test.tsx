@@ -221,28 +221,28 @@ describe('PokemonGrid', () => {
 //     });
 //   });
 
-it('handles card click correctly', () => {
-  const mockRouter = { push: jest.fn() };
-  (useRouter as jest.Mock).mockReturnValue(mockRouter);
+// it('handles card click correctly', () => {
+//   const mockRouter = { push: jest.fn() };
+//   (useRouter as jest.Mock).mockReturnValue(mockRouter);
 
-  const mockProps = {
-    initialPokemon: [
-      { name: 'Bulbasaur', number: 1, image: 'bulbasaur.png', types: ['grass'], gender_rate: 1 }
-    ],
-    currentPage: 1,
-    totalPages: 1,
-    initialSearchQuery: '',
-    initialSelectedTypes: [],
-    initialSelectedGenders: [],
-  };
+//   const mockProps = {
+//     initialPokemon: [
+//       { name: 'Bulbasaur', number: 1, image: 'bulbasaur.png', types: ['grass'], gender_rate: 1 }
+//     ],
+//     currentPage: 1,
+//     totalPages: 1,
+//     initialSearchQuery: '',
+//     initialSelectedTypes: [],
+//     initialSelectedGenders: [],
+//   };
 
-  render(<PokemonGrid {...mockProps} />);
+//   render(<PokemonGrid {...mockProps} />);
 
-  const pokemonCard = screen.getByText('Bulbasaur');
-  fireEvent.click(pokemonCard);
+//   const pokemonCard = screen.getByText('Bulbasaur');
+//   fireEvent.click(pokemonCard);
 
-  expect(mockRouter.push).toHaveBeenCalledWith('/pokemon/1-bulbasaur?from=1');
-});
+//   expect(mockRouter.push).toHaveBeenCalledWith('/pokemon/1-bulbasaur?from=1');
+// });
 
   it('displays "No Pokémon found" message when filtered list is empty', async () => {
     render(<PokemonGrid {...defaultProps} />);

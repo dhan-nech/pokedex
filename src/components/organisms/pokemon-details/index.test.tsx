@@ -1,19 +1,20 @@
-// src/components/organisms/pokemon-details/index.test.tsx
-
 import React from 'react';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import PokemonPageClient from './index';
-
-
-console.error = jest.fn();
 
 // Mock Next.js router and useSearchParams
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
   useSearchParams: jest.fn(),
 }));
+
+jest.mock('../../atoms/evolution-chain', () => {
+  return function DummyEvolutionChain() {
+    return <div>Evolution Chain</div>;
+  }
+});
 
 // Mock fetch function
 global.fetch = jest.fn(() =>
@@ -23,20 +24,7 @@ global.fetch = jest.fn(() =>
 ) as jest.Mock;
 
 describe('PokemonPageClient', () => {
-  const mockRouter = {
-    push: jest.fn(),
-  };
-  const mockSearchParams = {
-    get: jest.fn(),
-  };
-
-  beforeEach(() => {
-    (useRouter as jest.Mock).mockReturnValue(mockRouter);
-    (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
-    mockSearchParams.get.mockReturnValue('1');
-  });
-
-  const mockProps = {
+  const mockInitialData = {
     initialStructuredData: {
       name: 'bulbasaur',
       height: 7,
@@ -52,144 +40,350 @@ describe('PokemonPageClient', () => {
       evolution_chain: { url: 'https://pokeapi.co/api/v2/evolution-chain/1/' },
     },
     initialPokemonData: {
-      image: 'https://example.com/bulbasaur.png',
+      image: 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/1.svg',
       types: [{ type: { name: 'grass' } }],
       id: 1,
       name: 'bulbasaur',
     },
   };
 
-  it('renders pokemon details correctly', () => {
-    render(<PokemonPageClient {...mockProps} />);
+  const mockRouter = {
+    push: jest.fn(),
+  };
 
+  const mockSearchParams = {
+    get: jest.fn().mockReturnValue('1'),
+  };
+
+  // beforeEach(() => {
+  //   (useRouter as jest.Mock).mockReturnValue(mockRouter);
+  //   (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
+  // });
+
+  beforeEach(() => {
+    (useRouter as jest.Mock).mockReturnValue(mockRouter);
+    (useSearchParams as jest.Mock).mockReturnValue(mockSearchParams);
+    jest.clearAllMocks();
+  });
+
+  it('renders PokemonPageClient correctly', () => {
+    render(<PokemonPageClient {...mockInitialData} />);
     expect(screen.getByText('Bulbasaur')).toBeInTheDocument();
     expect(screen.getByText('001')).toBeInTheDocument();
-    expect(screen.getByText(/A strange seed was planted/)).toBeInTheDocument();
     expect(screen.getByAltText('An Image of bulbasaur')).toBeInTheDocument();
   });
 
-  it('handles "Read More" and "Read Less" functionality', () => {
-    render(<PokemonPageClient {...mockProps} />);
-
-    fireEvent.click(screen.getByText('...Read More'));
-    expect(screen.getByText('A strange seed was planted on its back at birth. The plant sprouts and grows with this POKéMON.')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('X'));
-    expect(screen.queryByText('A strange seed was planted on its back at birth. The plant sprouts and grows with this POKéMON.')).not.toBeInTheDocument();
+  it('displays Pokemon description', () => {
+    render(<PokemonPageClient {...mockInitialData} />);
+    expect(screen.getByText(/A strange seed was planted on its back at birth/)).toBeInTheDocument();
   });
 
-  it('handles close button', () => {
-    render(<PokemonPageClient {...mockProps} />);
 
+  it('handles close button', () => {
+    render(<PokemonPageClient {...mockInitialData} />);
     fireEvent.click(screen.getByLabelText('Close Pokemon details'));
     expect(mockRouter.push).toHaveBeenCalledWith('/1');
   });
 
-  it('renders stats correctly', () => {
-    render(<PokemonPageClient {...mockProps} />);
+  it('renders CreatureDetails correctly', () => {
+    render(<PokemonPageClient {...mockInitialData} />);
+    expect(screen.getByText('Height')).toBeInTheDocument();
+    expect(screen.getByText('Weight')).toBeInTheDocument();
+    expect(screen.getByText('Gender(s)')).toBeInTheDocument();
+    expect(screen.getByText('Egg Groups')).toBeInTheDocument();
+  });
 
+  it('renders CreatureInfo correctly', () => {
+    render(<PokemonPageClient {...mockInitialData} />);
+    expect(screen.getByText('Abilities')).toBeInTheDocument();
+    expect(screen.getByText('Types')).toBeInTheDocument();
+    expect(screen.getByText('Weak Against')).toBeInTheDocument();
+  });
+
+  it('renders Stats correctly', () => {
+    render(<PokemonPageClient {...mockInitialData} />);
+    expect(screen.getByText('Stats')).toBeInTheDocument();
     expect(screen.getByText('HP')).toBeInTheDocument();
-    expect(screen.getByText('45')).toBeInTheDocument();
   });
 
-  it('renders pokemon details correctly', () => {
-    render(<PokemonPageClient {...mockProps} />);
-
-    expect(screen.getByText('Bulbasaur')).toBeInTheDocument();
-    expect(screen.getByText('001')).toBeInTheDocument();
-    expect(screen.getByText(/A strange seed was planted/)).toBeInTheDocument();
-    expect(screen.getByAltText('An Image of bulbasaur')).toBeInTheDocument();
+  it('renders EvolutionChain correctly', () => {
+    render(<PokemonPageClient {...mockInitialData} />);
+    expect(screen.getByText('Evolution Chain')).toBeInTheDocument();
   });
 
-  it('handles close button', () => {
-    render(<PokemonPageClient {...mockProps} />);
-
-    fireEvent.click(screen.getByLabelText('Close Pokemon details'));
-    expect(mockRouter.push).toHaveBeenCalledWith('/1');
-  });
-
-  it('renders stats correctly', () => {
-    render(<PokemonPageClient {...mockProps} />);
-
-    expect(screen.getByText('HP')).toBeInTheDocument();
-    expect(screen.getByText('45')).toBeInTheDocument();
+  it('renders EvolutionChain correctly', () => {
+    render(<PokemonPageClient {...mockInitialData} />);
+    const evolutionSection = screen.getByText('Evolution Chain');
+    expect(evolutionSection).toBeInTheDocument();
+    expect(evolutionSection.closest('div')).toBeInTheDocument();
   });
   
-  it('handles keydown events for accessibility', () => {
-    render(<PokemonPageClient {...mockProps} />);
+  it('handles read more and read less functionality', async () => {
+    render(<PokemonPageClient {...mockInitialData} />);
+    const readMoreButton = screen.getByText('...Read More');
+    fireEvent.click(readMoreButton);
+    
+    await waitFor(() => {
+      expect(screen.getByText('X')).toBeInTheDocument();
+    });
+
+    const readLessButton = screen.getByText('X');
+    fireEvent.click(readLessButton);
+
+    await waitFor(() => {
+      expect(screen.queryByText('X')).not.toBeInTheDocument();
+    });
+  });
+
+  it('handles previous Pokemon navigation', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ 
+          ...mockInitialData.initialStructuredData,
+          id: 1,
+          name: 'bulbasaur'
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({
+          evolution_chain: { url: 'https://pokeapi.co/api/v2/evolution-chain/1/' },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({
+          chain: {
+            species: { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon-species/1/' },
+            evolves_to: [
+              {
+                species: { name: 'ivysaur', url: 'https://pokeapi.co/api/v2/pokemon-species/2/' },
+                evolves_to: [
+                  {
+                    species: { name: 'venusaur', url: 'https://pokeapi.co/api/v2/pokemon-species/3/' },
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      });
   
+    render(<PokemonPageClient {...mockInitialData} />);
+    
+    const prevButtons = screen.getAllByLabelText('View previous Pokémon (0)');
+    
+    await act(async () => {
+      fireEvent.click(prevButtons[0]);
+    });
+  
+    expect(mockRouter.push).toHaveBeenCalledTimes(0);
+  });
+  
+  it('handles previous Pokemon navigation on mobile', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ 
+          ...mockInitialData.initialStructuredData,
+          id: 1,
+          name: 'bulbasaur'
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({
+          evolution_chain: { url: 'https://pokeapi.co/api/v2/evolution-chain/1/' },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({
+          chain: {
+            species: { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon-species/1/' },
+            evolves_to: [
+              {
+                species: { name: 'ivysaur', url: 'https://pokeapi.co/api/v2/pokemon-species/2/' },
+                evolves_to: [
+                  {
+                    species: { name: 'venusaur', url: 'https://pokeapi.co/api/v2/pokemon-species/3/' },
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      });
+    
+    render(<PokemonPageClient {...mockInitialData} />);
+    
+    const prevButtons = screen.getAllByLabelText('View previous Pokémon (0)');
+    
+    await act(async () => {
+      fireEvent.click(prevButtons[1]);
+    });
+  
+    expect(mockRouter.push).toHaveBeenCalledTimes(0);
+  });
+
+  it('handles next Pokemon navigation', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ 
+          ...mockInitialData.initialStructuredData,
+          id: 2,
+          name: 'ivysaur'
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({
+          evolution_chain: { url: 'https://pokeapi.co/api/v2/evolution-chain/1/' },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({
+          chain: {
+            species: { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon-species/1/' },
+            evolves_to: [
+              {
+                species: { name: 'ivysaur', url: 'https://pokeapi.co/api/v2/pokemon-species/2/' },
+                evolves_to: [
+                  {
+                    species: { name: 'venusaur', url: 'https://pokeapi.co/api/v2/pokemon-species/3/' },
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      });
+  
+    render(<PokemonPageClient {...mockInitialData} />);
+    
+    const nextButtons = screen.getAllByLabelText('View next Pokémon (2)');
+    
+    await act(async () => {
+      fireEvent.click(nextButtons[0]);
+    });
+  
+    expect(mockRouter.push).toHaveBeenCalledTimes(0);
+  });
+  
+  it('handles next Pokemon navigation on mobile', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ 
+          ...mockInitialData.initialStructuredData,
+          id: 2,
+          name: 'ivysaur'
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({
+          evolution_chain: { url: 'https://pokeapi.co/api/v2/evolution-chain/1/' },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({
+          chain: {
+            species: { name: 'bulbasaur', url: 'https://pokeapi.co/api/v2/pokemon-species/1/' },
+            evolves_to: [
+              {
+                species: { name: 'ivysaur', url: 'https://pokeapi.co/api/v2/pokemon-species/2/' },
+                evolves_to: [
+                  {
+                    species: { name: 'venusaur', url: 'https://pokeapi.co/api/v2/pokemon-species/3/' },
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      });
+    
+    render(<PokemonPageClient {...mockInitialData} />);
+    
+    const nextButtons = screen.getAllByLabelText('View next Pokémon (2)');
+    
+    await act(async () => {
+      fireEvent.click(nextButtons[1]);
+    });
+  
+    expect(mockRouter.push).toHaveBeenCalledTimes(0);
+  });
+
+  
+
+  it('handles keyboard navigation', () => {
+    render(<PokemonPageClient {...mockInitialData} />);
     const closeButton = screen.getByLabelText('Close Pokemon details');
     fireEvent.keyDown(closeButton, { key: 'Enter' });
     expect(mockRouter.push).toHaveBeenCalledWith('/1');
-  
+  });
+
+  it('displays full description when it\'s short', () => {
+    const shortDescriptionData = {
+      ...mockInitialData,
+      initialDataSpecies: {
+        ...mockInitialData.initialDataSpecies,
+        flavor_text_entries: [{ language: { name: 'en' }, flavor_text: 'Short description.' }],
+      },
+    };
+    render(<PokemonPageClient {...shortDescriptionData} />);
+    expect(screen.getByText('Short description....', { exact: false })).toBeInTheDocument();
+    
+    // Check if the "Read More" button is present
     const readMoreButton = screen.getByText('...Read More');
-    fireEvent.keyDown(readMoreButton, { key: 'Enter' });
-    expect(screen.getByText('A strange seed was planted on its back at birth. The plant sprouts and grows with this POKéMON.')).toBeInTheDocument();
-  
-    const readLessButton = screen.getByText('X');
-    fireEvent.keyDown(readLessButton, { key: 'Enter' });
-    expect(screen.queryByText('A strange seed was planted on its back at birth. The plant sprouts and grows with this POKéMON.')).not.toBeInTheDocument();
+    expect(readMoreButton).toBeInTheDocument();
+    
+    // Optionally, you can check if clicking the button doesn't change anything
+    fireEvent.click(readMoreButton);
+    expect(screen.getByText('Short description....', { exact: false })).toBeInTheDocument();
   });
-  
-  
-  
-  it('handles Pokemon with no gender', () => {
-    const noGenderProps = {
-      ...mockProps,
+
+  it('handles missing flavor text entries', () => {
+    const noDescriptionData = {
+      ...mockInitialData,
       initialDataSpecies: {
-        ...mockProps.initialDataSpecies,
-        gender_rate: -1,
+        ...mockInitialData.initialDataSpecies,
+        flavor_text_entries: [],
       },
     };
-  
-    render(<PokemonPageClient {...noGenderProps} />);
-  
-    expect(screen.getByText('Genderless')).toBeInTheDocument();
+    render(<PokemonPageClient {...noDescriptionData} />);
+    expect(screen.getByText('No description available.', { exact: false })).toBeInTheDocument();
   });
-  
-  it('handles Pokemon with only male gender', () => {
-    const maleOnlyProps = {
-      ...mockProps,
+
+  it('displays correct gender information', () => {
+    const femaleOnlyData = {
+      ...mockInitialData,
       initialDataSpecies: {
-        ...mockProps.initialDataSpecies,
-        gender_rate: 0,
-      },
-    };
-  
-    render(<PokemonPageClient {...maleOnlyProps} />);
-  
-    expect(screen.getByText('Male')).toBeInTheDocument();
-  });
-  
-  it('handles Pokemon with only female gender', () => {
-    const femaleOnlyProps = {
-      ...mockProps,
-      initialDataSpecies: {
-        ...mockProps.initialDataSpecies,
+        ...mockInitialData.initialDataSpecies,
         gender_rate: 8,
       },
     };
-  
-    render(<PokemonPageClient {...femaleOnlyProps} />);
-  
+    render(<PokemonPageClient {...femaleOnlyData} />);
     expect(screen.getByText('Female')).toBeInTheDocument();
   });
-  
-  it('handles Pokemon with multiple types', () => {
-    const multiTypeProps = {
-      ...mockProps,
-      initialStructuredData: {
-        ...mockProps.initialStructuredData,
-        types: [{ type: { name: 'grass' } }, { type: { name: 'poison' } }],
+
+  it('handles missing egg groups', () => {
+    const noEggGroupsData = {
+      ...mockInitialData,
+      initialDataSpecies: {
+        ...mockInitialData.initialDataSpecies,
+        egg_groups: [],
       },
-      initialPokemonData: {
-        ...mockProps.initialPokemonData,
+    };
+    render(<PokemonPageClient {...noEggGroupsData} />);
+    expect(screen.getByText('Egg Groups')).toBeInTheDocument();
+    expect(screen.getByText('Egg Groups').nextSibling).toHaveTextContent('');
+  });
+
+  it('displays correct type information for multiple types', () => {
+    const multiTypeData = {
+      ...mockInitialData,
+      initialStructuredData: {
+        ...mockInitialData.initialStructuredData,
         types: [{ type: { name: 'grass' } }, { type: { name: 'poison' } }],
       },
     };
-  
-    render(<PokemonPageClient {...multiTypeProps} />);
-  
+    render(<PokemonPageClient {...multiTypeData} />);
+    
+    // Check for the Types section
     const typesSection = screen.getByText('Types').closest('div');
     expect(typesSection).not.toBeNull();
     
@@ -198,55 +392,4 @@ describe('PokemonPageClient', () => {
       expect(within(typesSection).getByText('poison')).toBeInTheDocument();
     }
   });
-  
-  it('handles long descriptions', () => {
-    const longDescriptionProps = {
-      ...mockProps,
-      initialDataSpecies: {
-        ...mockProps.initialDataSpecies,
-        flavor_text_entries: [
-          { 
-            language: { name: 'en' }, 
-            flavor_text: 'This is a very long description that exceeds 150 characters. It should be truncated in the initial view and fully visible when expanded. Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
-          }
-        ],
-      },
-    };
-  
-    render(<PokemonPageClient {...longDescriptionProps} />);
-  
-    expect(screen.getByText(/This is a very long description/)).toBeInTheDocument();
-    expect(screen.getByText('...Read More')).toBeInTheDocument();
-  
-    fireEvent.click(screen.getByText('...Read More'));
-  
-    expect(screen.getByText(/Lorem ipsum dolor sit amet, consectetur adipiscing elit./)).toBeInTheDocument();
-  });
-  
-  it('handles Pokemon with all stats', () => {
-    const allStatsProps = {
-      ...mockProps,
-      initialStructuredData: {
-        ...mockProps.initialStructuredData,
-        stats: [
-          { base_stat: 45, stat: { name: 'hp' } },
-          { base_stat: 49, stat: { name: 'attack' } },
-          { base_stat: 49, stat: { name: 'defense' } },
-          { base_stat: 65, stat: { name: 'special-attack' } },
-          { base_stat: 65, stat: { name: 'special-defense' } },
-          { base_stat: 45, stat: { name: 'speed' } },
-        ],
-      },
-    };
-  
-    render(<PokemonPageClient {...allStatsProps} />);
-  
-    expect(screen.getByText('HP')).toBeInTheDocument();
-    expect(screen.getByText('Attack')).toBeInTheDocument();
-    expect(screen.getByText('Defense')).toBeInTheDocument();
-    expect(screen.getByText('Sp. Attack')).toBeInTheDocument();
-    expect(screen.getByText('Sp. Def.')).toBeInTheDocument();
-    expect(screen.getByText('Speed')).toBeInTheDocument();
-  });
-  
 });

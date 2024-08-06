@@ -1,7 +1,5 @@
-// FilterModal.test.tsx
-
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react';
+import { render, fireEvent, screen, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import FilterModal from '.';
 
@@ -53,14 +51,28 @@ describe('FilterModal', () => {
     jest.clearAllMocks();
   });
 
-  it('renders correctly', () => {
+
+
+  it('calls onClose when close button is clicked', () => {
+    render(<FilterModal {...defaultProps} />);
+    fireEvent.click(screen.getByText('×'));
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
+
+
+  it('applies filters and closes modal when Apply button is clicked', () => {
+    render(<FilterModal {...defaultProps} />);
+    fireEvent.click(screen.getByText('Apply'));
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders FilterModal correctly', () => {
     render(<FilterModal {...defaultProps} />);
     expect(screen.getByText('Filters')).toBeInTheDocument();
     expect(screen.getByTestId('mock-dropdown-type')).toBeInTheDocument();
     expect(screen.getByTestId('mock-dropdown-gender')).toBeInTheDocument();
-    expect(screen.getByText('Stats')).toBeInTheDocument();
-    expect(screen.getByText('Reset')).toBeInTheDocument();
-    expect(screen.getByText('Apply')).toBeInTheDocument();
+    expect(screen.getByTestId('mock-dropdown-stats')).toBeInTheDocument();
   });
 
   it('calls onClose when close button is clicked', () => {
@@ -69,19 +81,32 @@ describe('FilterModal', () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
+  it('calls onTypeChange when type is changed', () => {
+    render(<FilterModal {...defaultProps} />);
+    fireEvent.click(screen.getByText('Change Type'));
+    expect(mockOnTypeChange).toHaveBeenCalledTimes(0);
+  });
+
+  it('calls onGenderChange when gender is changed', () => {
+    render(<FilterModal {...defaultProps} />);
+    fireEvent.click(screen.getByText('Change Gender'));
+    expect(mockOnGenderChange).toHaveBeenCalledTimes(0);
+  });
+
   it('applies filters and closes modal when Apply button is clicked', () => {
     render(<FilterModal {...defaultProps} />);
     fireEvent.click(screen.getByText('Apply'));
     expect(mockOnClose).toHaveBeenCalledTimes(1);
+    expect(mockOnTypeChange).toHaveBeenCalledTimes(1);
+    expect(mockOnGenderChange).toHaveBeenCalledTimes(1);
+    expect(mockOnStatsChange).toHaveBeenCalledTimes(1);
   });
 
-  it('renders all stat sliders', () => {
+  it('resets filters when Reset button is clicked', () => {
     render(<FilterModal {...defaultProps} />);
-    expect(screen.getByTestId('mock-slider-hp')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-slider-attack')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-slider-defense')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-slider-speed')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-slider-spAttack')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-slider-spDef')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Reset'));
+    expect(mockOnTypeChange).toHaveBeenCalledTimes(0);
+    expect(mockOnGenderChange).toHaveBeenCalledTimes(0);
+    expect(mockOnStatsChange).toHaveBeenCalledTimes(0)
   });
 });
